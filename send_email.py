@@ -7,17 +7,20 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 
-class EmailSender():
-    def __init__(self, config_name="smtpconfig_1", config_dir="smtpconfig"):
+class EmailSender:
+    def __init__(self, config_name="smtpconfig_1", config_dir=None):
         try:
-            config_path = os.path.join(config_dir, f"{config_name}.py")
-            spec = importlib.util.spec_from_file_location(config_name, config_path)
+            script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            config_dir = os.path.join(script_dir, "mail_lib", "smtpconfig")
+            self.config_path = os.path.join(config_dir, f"{config_name}.py")
+            spec = importlib.util.spec_from_file_location(config_name, self.config_path)
             config_module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(config_module)
             self.config = getattr(config_module, f"SMTP_CONFIG_{config_name.split('_')[-1]}").copy()
         except (ImportError, AttributeError) as e:
             print(f"Error loading configuration: {str(e)}")
         self.message = None
+
 
     def create_message(self, subject, recipient):
         self.message = MIMEMultipart()
